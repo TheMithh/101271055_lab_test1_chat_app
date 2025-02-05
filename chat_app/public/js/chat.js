@@ -1,74 +1,92 @@
 const socket = io();
 
-// Get username & room
 let username = localStorage.getItem("username") || "Anonymous";
-let room = localStorage.getItem("room") || "defaultRoom";
+let room = localStorage.getItem("room") || "devops";
 
+socket.emit("registerUser", username);
 socket.emit("joinRoom", room);
-console.log(`🏠 Joined room: ${room}`);
 
-// ✅ Load previous messages
+// Listen for previous messages on room join
 socket.on("previousMessages", (messages) => {
-    console.log("📥 Loading previous messages:", messages);
-    
-    const chatBox = document.getElementById("chat-box");
-    chatBox.innerHTML = ""; // Clear previous messages from old rooms
-
-    messages.forEach(msg => {
-        const messageElement = document.createElement("p");
-        messageElement.innerHTML = `<b>${msg.from_user}:</b> ${msg.message}`;
-        chatBox.appendChild(messageElement);
-    });
-
-    chatBox.scrollTop = chatBox.scrollHeight;
+  const chatBox = document.getElementById("chat-box");
+  chatBox.innerHTML = "";
+  messages.forEach((msg) => {
+    appendMessage(msg.from_user, msg.message);
+  });
 });
 
+// Function to append a message
+function appendMessage(fromUser, text) {
+  const chatBox = document.getElementById("chat-box");
+  const p = document.createElement("p");
+  p.innerHTML = `<b>${fromUser}:</b> ${text}`;
+  chatBox.appendChild(p);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    console.log("🚪 Logging out...");
-    
-    // ✅ Remove stored user session data
-    localStorage.removeItem("username");
-    localStorage.removeItem("room");
-
-    // ✅ Redirect back to login page
-    window.location.href = "/login.html";
-});
-
-// ✅ Function to send messages
+// Send group message
 document.getElementById("sendBtn").addEventListener("click", () => {
-    const messageInput = document.getElementById("message");
-    const message = messageInput.value.trim();
-
-    if (message) {
-        console.log("📤 Sending message:", message);
-        socket.emit("sendMessage", { from_user: username, room, message });
-        messageInput.value = "";
-    }
+  const messageInput = document.getElementById("message");
+  const message = messageInput.value.trim();
+  if (message) {
+    socket.emit("sendMessage", { from_user: username, room, message });
+    messageInput.value = "";
+  }
 });
 
-// ✅ Function to receive messages
+// Receive group message
 socket.on("receiveMessage", (msg) => {
-    console.log("📥 Received message:", msg);
-    const chatBox = document.getElementById("chat-box");
-    const messageElement = document.createElement("p");
-    messageElement.innerHTML = `<b>${msg.from_user}:</b> ${msg.message}`;
-    chatBox.appendChild(messageElement);
-    chatBox.scrollTop = chatBox.scrollHeight;
+  appendMessage(msg.from_user, msg.message);
 });
 
-// ✅ Handle changing rooms
+// 🟢 Typing Indicator for Room Chat
+const typingIndicator = document.getElementById("typing-indicator");
+const messageInput = document.getElementById("message");
+let typingTimeout;
+
+// Emit "typingRoom" when user types
+messageInput.addEventListener("input", () => {
+  socket.emit("typingRoom", { username, room });
+
+  // Clear previous timeout
+  if (typingTimeout) clearTimeout(typingTimeout);
+
+  // Remove typing message after 2 seconds of inactivity
+  typingTimeout = setTimeout(() => {
+    typingIndicator.textContent = "";
+  }, 2000);
+});
+
+// 🟢 Listen for typing indicator updates from server
+socket.on("userTypingRoom", (usersTyping) => {
+  if (usersTyping.length === 0) {
+    typingIndicator.textContent = "";
+  } else if (usersTyping.length === 1) {
+    typingIndicator.textContent = `${usersTyping[0]} is typing...`;
+  } else {
+    typingIndicator.textContent = `${usersTyping[0]} and ${usersTyping[1]} are typing...`;
+  }
+});
+
+// Switch rooms
 document.getElementById("roomSelect").addEventListener("change", () => {
-    const newRoom = document.getElementById("roomSelect").value;
-    console.log(`🔄 Changing to room: ${newRoom}`);
-
-    socket.emit("leaveRoom", room);
-    socket.emit("joinRoom", newRoom);
-
-    localStorage.setItem("room", newRoom);
-    room = newRoom;
-
-    // ✅ Clear chat box immediately when switching rooms
-    document.getElementById("chat-box").innerHTML = "";
+  const newRoom = document.getElementById("roomSelect").value;
+  socket.emit("leaveRoom", room);
+  socket.emit("joinRoom", newRoom);
+  localStorage.setItem("room", newRoom);
+  room = newRoom;
+  document.getElementById("chat-box").innerHTML = "";
 });
 
+// Leave Room -> Go back to home
+document.getElementById("leaveRoomBtn").addEventListener("click", () => {
+  socket.emit("leaveRoom", room);
+  window.location.href = "/home.html";
+});
+
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("username");
+  localStorage.removeItem("room");
+  window.location.href = "/login.html";
+});
