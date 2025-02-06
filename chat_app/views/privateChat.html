@@ -1,46 +1,28 @@
-<!-- File: views/privateChat.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Private Chat</title>
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-  />
-  <link rel="stylesheet" href="/css/style.css" />
-  <script src="/socket.io/socket.io.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private Chat</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-<div class="container">
-  <h2 class="text-center my-3">
-    Private Chat with <span id="buddyName"></span>
-  </h2>
-  <!-- Typing Indicator -->
-<p id="typing-indicator" class="text-muted"></p>
+    <div class="container">
+        <h2 class="text-center my-3">Chat with <span id="buddyName"></span></h2>
 
-  <div
-    id="chat-box"
-    class="border p-3"
-    style="height: 300px; overflow-y: scroll;"
-  ></div>
+        <p id="typing-indicator" class="text-muted text-center"></p>
 
-  <input
-    type="text"
-    id="message"
-    class="form-control my-2"
-    placeholder="Type your private message..."
-  />
-  <button id="sendBtn" class="btn btn-warning w-100 mb-2">
-    Send Private
-  </button>
+        <div id="chat-box" class="border p-3 d-flex flex-column" style="height: 350px; overflow-y: auto;"></div>
 
-  <button id="leavePrivateBtn" class="btn btn-secondary w-100 mb-2">
-    Leave Chat
-  </button>
-  <button id="logoutBtn" class="btn btn-danger w-100">Logout</button>
-</div>
+        <input type="text" id="message" class="form-control my-2" placeholder="Type your private message...">
+        <button id="sendBtn" class="btn btn-warning w-100">Send Private</button>
 
-<script src="/js/privateChat.js"></script>
+        <button id="leavePrivateBtn" class="btn btn-secondary w-100 mt-2">Leave Chat</button>
+        <button id="logoutBtn" class="btn btn-danger w-100 mt-2">Logout</button>
+    </div>
+
+    <script src="/js/privateChat.js"></script>
 </body>
 </html>

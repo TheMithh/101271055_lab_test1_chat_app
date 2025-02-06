@@ -52,7 +52,7 @@ socket.on("receivePrivateMessage", (pm) => {
   }
 });
 
-// 🟢 Typing Indicator - Detect Input Events
+
 const typingIndicator = document.getElementById("typing-indicator");
 const messageInput = document.getElementById("message");
 let typingTimeout;
@@ -70,7 +70,7 @@ messageInput.addEventListener("input", () => {
   }, 2000);
 });
 
-// 🟢 Receive "User is Typing..." event
+
 socket.on("userTypingPrivate", (typingUser) => {
   if (typingUser === buddy) {
     typingIndicator.textContent = `${typingUser} is typing...`;

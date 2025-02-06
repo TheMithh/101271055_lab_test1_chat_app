@@ -18,11 +18,25 @@ socket.on("previousMessages", (messages) => {
 // Function to append a message
 function appendMessage(fromUser, text) {
   const chatBox = document.getElementById("chat-box");
-  const p = document.createElement("p");
-  p.innerHTML = `<b>${fromUser}:</b> ${text}`;
-  chatBox.appendChild(p);
+
+  const msgContainer = document.createElement("div");
+  msgContainer.classList.add("chat-message", "text-start");
+
+  // Create a timestamp
+  const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  msgContainer.innerHTML = `
+      <div class='d-flex flex-column'>
+          <b class='text-primary' style='text-align: left;'>${fromUser}</b>
+          <span class='text-muted small' style='text-align: left;'>${timestamp}</span>
+          <div class='mt-1 p-2 bg-light rounded' style='text-align: left;'>${text}</div>
+      </div>
+  `;
+
+  chatBox.appendChild(msgContainer);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
+
 
 // Send group message
 document.getElementById("sendBtn").addEventListener("click", () => {
@@ -39,7 +53,7 @@ socket.on("receiveMessage", (msg) => {
   appendMessage(msg.from_user, msg.message);
 });
 
-// 🟢 Typing Indicator for Room Chat
+
 const typingIndicator = document.getElementById("typing-indicator");
 const messageInput = document.getElementById("message");
 let typingTimeout;
@@ -57,18 +71,27 @@ messageInput.addEventListener("input", () => {
   }, 2000);
 });
 
-// 🟢 Listen for typing indicator updates from server
+
+let lastTypingMessage = "";
+
 socket.on("userTypingRoom", (usersTyping) => {
-  if (usersTyping.length === 0) {
-    typingIndicator.textContent = "";
-  } else if (usersTyping.length === 1) {
-    typingIndicator.textContent = `${usersTyping[0]} is typing...`;
-  } else {
-    typingIndicator.textContent = `${usersTyping[0]} and ${usersTyping[1]} are typing...`;
+  let newTypingMessage = "";
+
+  if (usersTyping.length === 1) {
+    newTypingMessage = `${usersTyping[0]} is typing...`;
+  } else if (usersTyping.length > 1) {
+    newTypingMessage = `${usersTyping[0]} and ${usersTyping[1]} are typing...`;
+  }
+
+
+  if (newTypingMessage !== lastTypingMessage) {
+    typingIndicator.textContent = newTypingMessage;
+    lastTypingMessage = newTypingMessage;
   }
 });
 
-// Switch rooms
+
+
 document.getElementById("roomSelect").addEventListener("change", () => {
   const newRoom = document.getElementById("roomSelect").value;
   socket.emit("leaveRoom", room);
@@ -78,13 +101,12 @@ document.getElementById("roomSelect").addEventListener("change", () => {
   document.getElementById("chat-box").innerHTML = "";
 });
 
-// Leave Room -> Go back to home
 document.getElementById("leaveRoomBtn").addEventListener("click", () => {
   socket.emit("leaveRoom", room);
   window.location.href = "/home.html";
 });
 
-// Logout
+
 document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("username");
   localStorage.removeItem("room");
